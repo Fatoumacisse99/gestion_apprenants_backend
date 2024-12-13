@@ -1,6 +1,6 @@
 import prisma from "../config/prisma.js";
 
-export default class Module {
+export default class ModuleController {
   static async getByIdModule(req, res, next) {
     try {
       const id = parseInt(req.params.id);

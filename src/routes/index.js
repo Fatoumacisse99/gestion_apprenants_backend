@@ -1,4 +1,6 @@
 // src/routes/index.js
 import routeStudent from "./studentRoute.js";
-const routes = [ routeStudent];
+// import routeModule from "./moduleRoute.js";
+
+const routes = [ routeStudent,];
 export default routes;
