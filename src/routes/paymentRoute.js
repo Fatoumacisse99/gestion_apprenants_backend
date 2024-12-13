@@ -1,16 +1,16 @@
 import { Router } from "express";
 import PaymentController from "../controllers/PaymentController.js";
 import {
-  addRequestValidator,
-  updateRequestValidator,
-  deleteRequestValidator,
-} from "../validators/paymentValidator.js";
+  addPaymentValidator,
+  updatePaymentValidator,
+  deletePaymentValidator,
+} from "../validators/PaymentValidator.js";
 
 const router = Router();
-router.post("/payment", addRequestValidator, PaymentController.createPayment);
+router.post("/payment", addPaymentValidator, PaymentController.createPayment);
 router.get("/payments", PaymentController.getAllPayments);
 router.get("/payment/:id", PaymentController.getByIdPayment);
-router.put("/payment/:id", updateRequestValidator, PaymentController.updatePayment);
-router.delete("/payment/:id", deleteRequestValidator, PaymentController.deletePayment);
+router.put("/payment/:id", updatePaymentValidator, PaymentController.updatePayment);
+router.delete("/payment/:id", deletePaymentValidator, PaymentController.deletePayment);
 
 export default router;
