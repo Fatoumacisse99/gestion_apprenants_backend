@@ -8,11 +8,13 @@ export const addRegistrationValidator = [
     .notEmpty()
     .withMessage("La date de début est requise.")
     .bail()
-    .custom((startDate) => {
+    .custom((startDate, { req }) => {
       const parsedStartDate = new Date(startDate);
       if (isNaN(parsedStartDate)) {
         throw new Error("La date de début doit être une date valide.");
       }
+      // Conversion de la date en ISOString
+      req.body.startDate = parsedStartDate.toISOString();
       return true;
     }),
 
@@ -30,6 +32,8 @@ export const addRegistrationValidator = [
       if (parsedEndDate <= parsedStartDate) {
         throw new Error("La date de fin doit être après la date de début.");
       }
+      // Conversion de la date en ISOString
+      req.body.endDate = parsedEndDate.toISOString();
       return true;
     }),
 
@@ -65,6 +69,22 @@ export const addRegistrationValidator = [
       return true;
     }),
 
+  // Vérifier si l'étudiant est déjà inscrit à ce module
+  check("studentId")
+    .custom(async (studentId, { req }) => {
+      const { moduleId } = req.body;
+      const existingRegistration = await prisma.registration.findFirst({
+        where: {
+          studentId: Number(studentId),
+          moduleId: Number(moduleId),
+        },
+      });
+      if (existingRegistration) {
+        throw new Error("L'étudiant est déjà inscrit à ce module.");
+      }
+      return true;
+    }),
+
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -75,6 +95,8 @@ export const addRegistrationValidator = [
     next();
   },
 ];
+
+// Validation pour la mise à jour d'une inscription
 export const updateRegistrationValidator = [
   param("id")
     .notEmpty()
@@ -90,11 +112,13 @@ export const updateRegistrationValidator = [
 
   check("startDate")
     .optional()
-    .custom((startDate) => {
+    .custom((startDate, { req }) => {
       const parsedStartDate = new Date(startDate);
       if (isNaN(parsedStartDate)) {
         throw new Error("La date de début doit être une date valide.");
       }
+      // Conversion de la date en ISOString
+      req.body.startDate = parsedStartDate.toISOString();
       return true;
     }),
 
@@ -110,6 +134,8 @@ export const updateRegistrationValidator = [
       if (parsedEndDate <= parsedStartDate) {
         throw new Error("La date de fin doit être après la date de début.");
       }
+      // Conversion de la date en ISOString
+      req.body.endDate = parsedEndDate.toISOString();
       return true;
     }),
 
@@ -139,6 +165,22 @@ export const updateRegistrationValidator = [
       return true;
     }),
 
+  // Vérifier si l'étudiant est déjà inscrit à ce module
+  check("studentId")
+    .custom(async (studentId, { req }) => {
+      const { moduleId } = req.body;
+      const existingRegistration = await prisma.registration.findFirst({
+        where: {
+          studentId: Number(studentId),
+          moduleId: Number(moduleId),
+        },
+      });
+      if (existingRegistration) {
+        throw new Error("L'étudiant est déjà inscrit à ce module.");
+      }
+      return true;
+    }),
+
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -150,6 +192,7 @@ export const updateRegistrationValidator = [
   },
 ];
 
+// Validation pour la suppression d'une inscription
 export const deleteRegistrationValidator = [
   param("id")
     .notEmpty()
@@ -174,6 +217,7 @@ export const deleteRegistrationValidator = [
   },
 ];
 
+// Validation pour récupérer une inscription
 export const getRegistrationValidator = [
   param("id")
     .notEmpty()
