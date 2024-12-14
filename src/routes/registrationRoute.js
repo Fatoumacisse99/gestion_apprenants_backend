@@ -1,5 +1,5 @@
 import { Router } from "express";
-import RegistrationController from "../controllers/RegistrationController.js";
+import RegistrationController from "../controllers/RegistrationController.js/index.js";
 import {
   addRegistrationValidator,
   updateRegistrationValidator,

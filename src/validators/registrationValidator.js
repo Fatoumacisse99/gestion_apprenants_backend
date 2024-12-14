@@ -8,18 +8,27 @@ export const addRegistrationValidator = [
     .notEmpty()
     .withMessage("La date de début est requise.")
     .bail()
-    .isISO8601()
-    .withMessage("La date de début doit être au format valide."),
+    .custom((startDate) => {
+      const parsedStartDate = new Date(startDate);
+      if (isNaN(parsedStartDate)) {
+        throw new Error("La date de début doit être une date valide.");
+      }
+      return true;
+    }),
 
   check("endDate")
     .notEmpty()
     .withMessage("La date de fin est requise.")
     .bail()
-    .isISO8601()
-    .withMessage("La date de fin doit être au format valide.")
-    .custom((value, { req }) => {
-      if (new Date(value) <= new Date(req.body.startDate)) {
-        throw new Error("La date de fin doit être supérieure à la date de début.");
+    .custom((endDate, { req }) => {
+      const parsedEndDate = new Date(endDate);
+      if (isNaN(parsedEndDate)) {
+        throw new Error("La date de fin doit être une date valide.");
+      }
+
+      const parsedStartDate = new Date(req.body.startDate);
+      if (parsedEndDate <= parsedStartDate) {
+        throw new Error("La date de fin doit être après la date de début.");
       }
       return true;
     }),
@@ -28,112 +37,163 @@ export const addRegistrationValidator = [
     .notEmpty()
     .withMessage("Le montant est requis.")
     .bail()
-    .isDecimal()
-    .withMessage("Le montant doit être un nombre décimal.")
-    .isLength({ min: 1 })
-    .withMessage("Le montant doit être supérieur à 0."),
+    .isFloat({ min: 0.01 })
+    .withMessage("Le montant doit être supérieur à 0.")
+    .bail(),
 
   check("studentId")
     .notEmpty()
-    .withMessage("L'identifiant de l'étudiant est requis.")
+    .withMessage("L'ID de l'étudiant est requis.")
     .bail()
-    .isInt()
-    .withMessage("L'identifiant de l'étudiant doit être un nombre entier.")
-    .custom(async (value) => {
-      const student = await prisma.student.findUnique({ where: { id: value } });
+    .custom(async (id) => {
+      const student = await prisma.student.findUnique({ where: { id: Number(id) } });
       if (!student) {
-        throw new Error("L'étudiant avec cet identifiant n'existe pas.");
+        throw new Error("L'étudiant spécifié n'existe pas.");
       }
       return true;
     }),
 
   check("moduleId")
     .notEmpty()
-    .withMessage("L'identifiant du module est requis.")
+    .withMessage("L'ID du module est requis.")
     .bail()
-    .isInt()
-    .withMessage("L'identifiant du module doit être un nombre entier.")
-    .custom(async (value) => {
-      const module = await prisma.module.findUnique({ where: { id: value } });
+    .custom(async (id) => {
+      const module = await prisma.module.findUnique({ where: { id: Number(id) } });
       if (!module) {
-        throw new Error("Le module avec cet identifiant n'existe pas.");
+        throw new Error("Le module spécifié n'existe pas.");
       }
       return true;
     }),
-];
 
-// Validation pour la mise à jour d'une inscription
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(StatusCodes.UNPROCESSABLE_ENTITY)
+        .json({ errors: errors.array() });
+    }
+    next();
+  },
+];
 export const updateRegistrationValidator = [
+  param("id")
+    .notEmpty()
+    .withMessage("L'ID de l'inscription est requis.")
+    .bail()
+    .custom(async (id) => {
+      const registration = await prisma.registration.findUnique({ where: { id: Number(id) } });
+      if (!registration) {
+        throw new Error("L'inscription spécifiée n'existe pas.");
+      }
+      return true;
+    }),
+
   check("startDate")
     .optional()
-    .isISO8601()
-    .withMessage("La date de début doit être au format valide.")
-    .bail()
-    .custom((value, { req }) => {
-      if (value && new Date(value) <= new Date(req.body.startDate)) {
-        throw new Error("La date de fin doit être supérieure à la date de début.");
+    .custom((startDate) => {
+      const parsedStartDate = new Date(startDate);
+      if (isNaN(parsedStartDate)) {
+        throw new Error("La date de début doit être une date valide.");
       }
       return true;
     }),
 
   check("endDate")
     .optional()
-    .isISO8601()
-    .withMessage("La date de fin doit être au format valide."),
-    
+    .custom((endDate, { req }) => {
+      const parsedEndDate = new Date(endDate);
+      if (isNaN(parsedEndDate)) {
+        throw new Error("La date de fin doit être une date valide.");
+      }
+
+      const parsedStartDate = new Date(req.body.startDate);
+      if (parsedEndDate <= parsedStartDate) {
+        throw new Error("La date de fin doit être après la date de début.");
+      }
+      return true;
+    }),
+
   check("mount")
     .optional()
-    .isDecimal()
-    .withMessage("Le montant doit être un nombre décimal.")
-    .isLength({ min: 1 })
-    .withMessage("Le montant doit être supérieur à 0."),
+    .isFloat({ min: 0.01 })
+    .withMessage("Le montant doit être supérieur à 0.")
+    .bail(),
 
   check("studentId")
     .optional()
-    .isInt()
-    .withMessage("L'identifiant de l'étudiant doit être un nombre entier.")
-    .custom(async (value) => {
-      const student = await prisma.student.findUnique({ where: { id: value } });
+    .custom(async (id) => {
+      const student = await prisma.student.findUnique({ where: { id: Number(id) } });
       if (!student) {
-        throw new Error("L'étudiant avec cet identifiant n'existe pas.");
+        throw new Error("L'étudiant spécifié n'existe pas.");
       }
       return true;
     }),
 
   check("moduleId")
     .optional()
-    .isInt()
-    .withMessage("L'identifiant du module doit être un nombre entier.")
-    .custom(async (value) => {
-      const module = await prisma.module.findUnique({ where: { id: value } });
+    .custom(async (id) => {
+      const module = await prisma.module.findUnique({ where: { id: Number(id) } });
       if (!module) {
-        throw new Error("Le module avec cet identifiant n'existe pas.");
+        throw new Error("Le module spécifié n'existe pas.");
       }
       return true;
     }),
+
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(StatusCodes.UNPROCESSABLE_ENTITY)
+        .json({ errors: errors.array() });
+    }
+    next();
+  },
 ];
 
-// Validation pour la suppression d'une inscription
 export const deleteRegistrationValidator = [
   param("id")
-    .isInt()
-    .withMessage("L'identifiant de l'inscription doit être un nombre entier.")
-    .custom(async (value) => {
-      const registration = await prisma.registration.findUnique({ where: { id: value } });
+    .notEmpty()
+    .withMessage("L'ID de l'inscription est requis.")
+    .bail()
+    .custom(async (id) => {
+      const registration = await prisma.registration.findUnique({ where: { id: Number(id) } });
       if (!registration) {
-        throw new Error("L'inscription avec cet identifiant n'existe pas.");
+        throw new Error("L'inscription spécifiée n'existe pas.");
       }
       return true;
     }),
+
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(StatusCodes.UNPROCESSABLE_ENTITY)
+        .json({ errors: errors.array() });
+    }
+    next();
+  },
 ];
 
-// Fonction pour vérifier les erreurs de validation
-export const handleValidationErrors = (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(StatusCodes.BAD_REQUEST).json({
-      errors: errors.array(),
-    });
-  }
-  next();
-};
+export const getRegistrationValidator = [
+  param("id")
+    .notEmpty()
+    .withMessage("L'ID de l'inscription est requis.")
+    .bail()
+    .custom(async (id) => {
+      const registration = await prisma.registration.findUnique({ where: { id: Number(id) } });
+      if (!registration) {
+        throw new Error("L'inscription spécifiée n'existe pas.");
+      }
+      return true;
+    }),
+
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(StatusCodes.UNPROCESSABLE_ENTITY)
+        .json({ errors: errors.array() });
+    }
+    next();
+  },
+];

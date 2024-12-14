@@ -1,64 +1,141 @@
-import { check, param, body, validationResult } from "express-validator";
+import { check, param, validationResult } from "express-validator";
 import { StatusCodes } from "http-status-codes";
 import prisma from "../config/prisma.js";
 
 // Validation pour l'ajout d'un paiement
 export const addPaymentValidator = [
   check("amount")
-    .isDecimal({ decimal_digits: '2' })
-    .withMessage("Le montant doit être un nombre décimal avec 2 chiffres après la virgule."),
+    .notEmpty()
+    .withMessage("Le montant est requis.")
+    .bail()
+    .isFloat({ min: 0.01 })
+    .withMessage("Le montant doit être supérieur à 0.")
+    .bail(),
+
   check("paymentDate")
-    .isDate()
-    .withMessage("La date de paiement doit être une date valide."),
+    .notEmpty()
+    .withMessage("La date de paiement est requise.")
+    .bail()
+    .isISO8601()
+    .withMessage("La date de paiement doit être une date valide.")
+    .bail(),
+
   check("studentId")
-    .isInt()
-    .withMessage("L'ID de l'étudiant doit être un nombre entier.")
-    .custom(async (value) => {
-      const student = await prisma.student.findUnique({ where: { id: value } });
+    .notEmpty()
+    .withMessage("L'ID de l'étudiant est requis.")
+    .bail()
+    .custom(async (id) => {
+      const student = await prisma.student.findUnique({ where: { id: Number(id) } });
       if (!student) {
-        return Promise.reject("L'étudiant n'existe pas.");
+        throw new Error("L'étudiant spécifié n'existe pas.");
       }
+      return true;
     }),
-  check("moduleId")
-    .isInt()
-    .withMessage("L'ID du module doit être un nombre entier.")
-    .custom(async (value) => {
-      const module = await prisma.module.findUnique({ where: { id: value } });
-      if (!module) {
-        return Promise.reject("Le module n'existe pas.");
-      }
-    })
+
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(StatusCodes.UNPROCESSABLE_ENTITY)
+        .json({ errors: errors.array() });
+    }
+    next();
+  },
 ];
 
 // Validation pour la mise à jour d'un paiement
 export const updatePaymentValidator = [
+  param("id")
+    .notEmpty()
+    .withMessage("L'ID du paiement est requis.")
+    .bail()
+    .custom(async (id) => {
+      const payment = await prisma.payment.findUnique({ where: { id: Number(id) } });
+      if (!payment) {
+        throw new Error("Le paiement spécifié n'existe pas.");
+      }
+      return true;
+    }),
+
   check("amount")
     .optional()
-    .isDecimal({ decimal_digits: '2' })
-    .withMessage("Le montant doit être un nombre décimal avec 2 chiffres après la virgule."),
+    .isFloat({ min: 0.01 })
+    .withMessage("Le montant doit être supérieur à 0.")
+    .bail(),
+
   check("paymentDate")
     .optional()
-    .isDate()
-    .withMessage("La date de paiement doit être une date valide."),
+    .isISO8601()
+    .withMessage("La date de paiement doit être une date valide.")
+    .bail(),
+
   check("studentId")
     .optional()
-    .isInt()
-    .withMessage("L'ID de l'étudiant doit être un nombre entier."),
-  check("moduleId")
-    .optional()
-    .isInt()
-    .withMessage("L'ID du module doit être un nombre entier.")
+    .custom(async (id) => {
+      const student = await prisma.student.findUnique({ where: { id: Number(id) } });
+      if (!student) {
+        throw new Error("L'étudiant spécifié n'existe pas.");
+      }
+      return true;
+    }),
+
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(StatusCodes.UNPROCESSABLE_ENTITY)
+        .json({ errors: errors.array() });
+    }
+    next();
+  },
 ];
 
 // Validation pour la suppression d'un paiement
 export const deletePaymentValidator = [
   param("id")
-    .isInt()
-    .withMessage("L'ID du paiement doit être un nombre entier.")
-    .custom(async (value) => {
-      const payment = await prisma.payment.findUnique({ where: { id: parseInt(value) } });
+    .notEmpty()
+    .withMessage("L'ID du paiement est requis.")
+    .bail()
+    .custom(async (id) => {
+      const payment = await prisma.payment.findUnique({ where: { id: Number(id) } });
       if (!payment) {
-        return Promise.reject("Le paiement n'existe pas.");
+        throw new Error("Le paiement spécifié n'existe pas.");
       }
-    })
+      return true;
+    }),
+
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(StatusCodes.UNPROCESSABLE_ENTITY)
+        .json({ errors: errors.array() });
+    }
+    next();
+  },
+];
+
+// Validation pour la récupération d'un paiement
+export const getPaymentValidator = [
+  param("id")
+    .notEmpty()
+    .withMessage("L'ID du paiement est requis.")
+    .bail()
+    .custom(async (id) => {
+      const payment = await prisma.payment.findUnique({ where: { id: Number(id) } });
+      if (!payment) {
+        throw new Error("Le paiement spécifié n'existe pas.");
+      }
+      return true;
+    }),
+
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(StatusCodes.UNPROCESSABLE_ENTITY)
+        .json({ errors: errors.array() });
+    }
+    next();
+  },
 ];
