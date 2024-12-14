@@ -14,7 +14,9 @@ export default class PaymentController {
         res.status(404).json({ message: "Paiement introuvable." });
       }
     } catch (error) {
-      res.status(400).json({ message: "Erreur lors de la récupération du paiement." });
+      res
+        .status(400)
+        .json({ message: "Erreur lors de la récupération du paiement." });
     } finally {
       await prisma.$disconnect();
     }
@@ -28,7 +30,9 @@ export default class PaymentController {
       });
       res.json({ result });
     } catch (error) {
-      res.status(400).json({ message: "Erreur lors de la récupération des paiements." });
+      res
+        .status(400)
+        .json({ message: "Erreur lors de la récupération des paiements." });
     } finally {
       await prisma.$disconnect();
     }
@@ -37,12 +41,14 @@ export default class PaymentController {
 
   static async createPayment(req, res, next) {
     try {
-      const { paymentDate, amount, payer, payerNumber, paymentMode, registrationId } = req.body;
+      const { payer, amount, payerNumber, paymentMode, registrationId } =
+        req.body;
+      const paymentDate = new Date();
 
       const result = await prisma.payment.create({
         data: {
-          paymentDate,
-          amount,
+          paymentDate: new Date(paymentDate).toISOString(),
+          amount: parseFloat(amount),
           payer,
           payerNumber,
           paymentMode,
@@ -51,7 +57,9 @@ export default class PaymentController {
       });
       res.status(201).json({ message: "Paiement créé avec succès.", result });
     } catch (error) {
-      res.status(400).json({ message: "Erreur lors de la création du paiement." });
+      res
+        .status(400)
+        .json({ message: "Erreur lors de la création du paiement." });
     } finally {
       await prisma.$disconnect();
     }
@@ -61,22 +69,33 @@ export default class PaymentController {
   static async updatePayment(req, res, next) {
     try {
       const id = Number(req.params.id);
-      const { paymentDate, amount, payer, payerNumber, paymentMode, registrationId } = req.body;
+      const {
+        paymentDate,
+        amount,
+        payer,
+        payerNumber,
+        paymentMode,
+        registrationId,
+      } = req.body;
 
       const result = await prisma.payment.update({
         where: { id },
         data: {
-          paymentDate,
-          amount,
+          paymentDate: new Date(paymentDate).toISOString(),
+          amount: parseFloat(amount),
           payer,
           payerNumber,
           paymentMode,
           registrationId,
         },
       });
-      res.status(200).json({ message: "Paiement mis à jour avec succès.", result });
+      res
+        .status(200)
+        .json({ message: "Paiement mis à jour avec succès.", result });
     } catch (error) {
-      res.status(400).json({ message: "Erreur lors de la mise à jour du paiement." });
+      res
+        .status(400)
+        .json({ message: "Erreur lors de la mise à jour du paiement." });
     } finally {
       await prisma.$disconnect();
     }
@@ -89,7 +108,9 @@ export default class PaymentController {
       await prisma.payment.delete({ where: { id } });
       res.status(200).json({ message: "Paiement supprimé avec succès." });
     } catch (error) {
-      res.status(400).json({ message: "Erreur lors de la suppression du paiement." });
+      res
+        .status(400)
+        .json({ message: "Erreur lors de la suppression du paiement." });
     } finally {
       await prisma.$disconnect();
     }

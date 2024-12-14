@@ -1,3 +1,4 @@
+import moment from "moment";
 import prisma from "../config/prisma.js";
 
 export default class RegistrationController {
@@ -14,7 +15,9 @@ export default class RegistrationController {
         res.status(404).json({ message: "Inscription introuvable." });
       }
     } catch (error) {
-      res.status(400).json({ message: "Erreur lors de la récupération de l'inscription." });
+      res
+        .status(400)
+        .json({ message: "Erreur lors de la récupération de l'inscription." });
     } finally {
       await prisma.$disconnect();
     }
@@ -28,7 +31,9 @@ export default class RegistrationController {
       });
       res.json({ result });
     } catch (error) {
-      res.status(400).json({ message: "Erreur lors de la récupération des inscriptions." });
+      res
+        .status(400)
+        .json({ message: "Erreur lors de la récupération des inscriptions." });
     } finally {
       await prisma.$disconnect();
     }
@@ -37,21 +42,32 @@ export default class RegistrationController {
 
   static async createRegistration(req, res, next) {
     try {
-      const { dateRegister, startDate, endDate, mount, studentId, moduleId } = req.body;
-
+      const { dateRegister, startDate, studentId, moduleId } = req.body;
+      const module = await prisma.module.findFirst({
+        where: { id: Number(moduleId) },
+      });
+      const duration = Number(module.duration);
+      console.log(duration);
+      const endDate = moment(startDate).add(duration, "day");
+      const mount = parseFloat(module.price);
       const result = await prisma.registration.create({
         data: {
-          dateRegister,
-          startDate,
-          endDate,
-          mount,
-          studentId,
-          moduleId,
+          dateRegister: new Date(dateRegister).toISOString(),
+          startDate: new Date(startDate).toISOString(),
+          endDate: new Date(endDate).toISOString(),
+          mount: Number(mount),
+          studentId: Number(studentId),
+          moduleId: Number(moduleId),
         },
       });
-      res.status(201).json({ message: "Inscription créée avec succès.", result });
+      res
+        .status(201)
+        .json({ message: "Inscription créée avec succès.", result });
     } catch (error) {
-      res.status(400).json({ message: "Erreur lors de la création de l'inscription." });
+      res.status(400).json({
+        message: "Erreur lors de la création de l'inscription.",
+        error: error.message,
+      });
     } finally {
       await prisma.$disconnect();
     }
@@ -61,22 +77,33 @@ export default class RegistrationController {
   static async updateRegistration(req, res, next) {
     try {
       const id = Number(req.params.id);
-      const { dateRegister, startDate, endDate, mount, studentId, moduleId } = req.body;
+      const { dateRegister, startDate, mount, studentId, moduleId } = req.body;
+
+      const module = await prisma.module.findFirst({
+        where: { id: Number(moduleId) },
+      });
+      const duration = Number(module.duration);
+      console.log(duration);
+      const endDate = moment(startDate).add(duration, "day");
 
       const result = await prisma.registration.update({
         where: { id },
         data: {
-          dateRegister,
-          startDate,
-          endDate,
-          mount,
-          studentId,
-          moduleId,
+          dateRegister: new Date(dateRegister).toISOString(),
+          startDate: new Date(startDate).toISOString(),
+          endDate: new Date(endDate).toISOString(),
+          mount: Number(mount),
+          studentId: Number(studentId),
+          moduleId: Number(moduleId),
         },
       });
-      res.status(200).json({ message: "Inscription mise à jour avec succès.", result });
+      res
+        .status(200)
+        .json({ message: "Inscription mise à jour avec succès.", result });
     } catch (error) {
-      res.status(400).json({ message: "Erreur lors de la mise à jour de l'inscription." });
+      res
+        .status(400)
+        .json({ message: "Erreur lors de la mise à jour de l'inscription." });
     } finally {
       await prisma.$disconnect();
     }
@@ -89,7 +116,9 @@ export default class RegistrationController {
       await prisma.registration.delete({ where: { id } });
       res.status(200).json({ message: "Inscription supprimée avec succès." });
     } catch (error) {
-      res.status(400).json({ message: "Erreur lors de la suppression de l'inscription." });
+      res
+        .status(400)
+        .json({ message: "Erreur lors de la suppression de l'inscription." });
     } finally {
       await prisma.$disconnect();
     }
