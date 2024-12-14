@@ -1,4 +1,5 @@
 import prisma from "../config/prisma.js";
+import moment from 'moment';
 
 export default class RegistrationController {
   static async getByIdRegistration(req, res, next) {
@@ -37,21 +38,26 @@ export default class RegistrationController {
 
   static async createRegistration(req, res, next) {
     try {
-      const { dateRegister, startDate, endDate, mount, studentId, moduleId } = req.body;
-
+      const { dateRegister, startDate, studentId, moduleId } = req.body;
+      const module = await prisma.module.findFirst({ where: { id: Number(moduleId) } });
+      const duration = Number(module.duration);
+      const endDate = moment(startDate).add(duration, "days").format("YYYY-MM-DD"); // Formater la date de fin
+      const amount = parseFloat(module.price); // Prix du module
+      
       const result = await prisma.registration.create({
         data: {
-          dateRegister,
-          startDate,
-          endDate,
-          mount,
-          studentId,
-          moduleId,
+          dateRegister: new Date(dateRegister).toISOString(),
+          startDate: new Date(startDate).toISOString(),
+          endDate: new Date(endDate).toISOString(),
+          mount: amount,
+          studentId: Number(studentId),
+          moduleId: Number(moduleId),
         },
       });
+
       res.status(201).json({ message: "Inscription créée avec succès.", result });
     } catch (error) {
-      res.status(400).json({ message: "Erreur lors de la création de l'inscription." });
+      res.status(400).json({ message: "Erreur lors de la création de l'inscription.", error: error.message });
     } finally {
       await prisma.$disconnect();
     }
@@ -61,19 +67,23 @@ export default class RegistrationController {
   static async updateRegistration(req, res, next) {
     try {
       const id = Number(req.params.id);
-      const { dateRegister, startDate, endDate, mount, studentId, moduleId } = req.body;
+      const { dateRegister, startDate, mount, studentId, moduleId } = req.body;
+      const module = await prisma.module.findFirst({ where: { id: Number(moduleId) } });
+      const duration = Number(module.duration);
+      const endDate = moment(startDate).add(duration, "days").format("YYYY-MM-DD"); // Formater la date de fin
 
       const result = await prisma.registration.update({
         where: { id },
         data: {
-          dateRegister,
-          startDate,
-          endDate,
-          mount,
-          studentId,
-          moduleId,
+          dateRegister: new Date(dateRegister).toISOString(),
+          startDate: new Date(startDate).toISOString(),
+          endDate: new Date(endDate).toISOString(),
+          mount: parseFloat(mount),
+          studentId: Number(studentId),
+          moduleId: Number(moduleId),
         },
       });
+
       res.status(200).json({ message: "Inscription mise à jour avec succès.", result });
     } catch (error) {
       res.status(400).json({ message: "Erreur lors de la mise à jour de l'inscription." });
