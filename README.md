@@ -1,4 +1,3 @@
-
 # API de Gestion de Suivi des Formations
 
 ## Description
@@ -89,8 +88,8 @@ Vous pouvez consulter la documentation des endpoints et tester les différents p
 
 [Fatouma Cissé](https://github.com/Fatoumacisse99/)
 
-Contributeurs
+## Contributeurs
+
 [Fatima Sall](https://github.com/FatimataAliouSall)
+
 [Harouna Adama Traoré](https://github.com/HarounaTraore)
-
-
