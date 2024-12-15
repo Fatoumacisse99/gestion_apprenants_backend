@@ -12,6 +12,9 @@ export const addModuleValidator = [
     .isLength({ min: 2, max: 50 })
     .withMessage("Le nom du module doit contenir entre 2 et 50 caractères.")
     .bail()
+    .isAlpha('fr-FR', { ignore: ' ' })
+    .withMessage("Le nom du module doit contenir uniquement des lettres.")
+    .bail()
     .custom(async (name) => {
       const existingModule = await prisma.module.findFirst({ where: { name } });
       if (existingModule) {
@@ -68,7 +71,10 @@ export const updateModuleValidator = [
     .optional()
     .trim()
     .isLength({ min: 2, max: 50 })
-    .withMessage("Le nom du module doit contenir entre 2 et 50 caractères."),
+    .withMessage("Le nom du module doit contenir entre 2 et 50 caractères.")
+    .isAlpha('fr-FR', { ignore: ' ' })
+    .withMessage("Le nom du module doit contenir uniquement des lettres.")
+    .bail(),
 
   check("duration")
     .optional()

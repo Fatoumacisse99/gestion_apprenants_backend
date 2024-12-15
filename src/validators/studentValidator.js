@@ -20,15 +20,18 @@ export const addRequestValidator = [
     .notEmpty()
     .withMessage("Le numéro de téléphone est requis.")
     .bail()
-    .isLength({ min: 8, max: 15 })
-    .withMessage("Le numéro de téléphonene doit être entre 8 et 15 caractères.")
+    .isNumeric()
+    .withMessage("Le numéro de téléphone doit contenir uniquement des chiffres.")
+    .bail()
+    .isLength({ min: 8, max: 8 })
+    .withMessage("Le numéro de téléphone doit être exactement de 8 caractères.")
     .bail()
     .custom(async (value) => {
       const result = await prisma.student.findFirst({
         where: { phoneNumber: value },
       });
       if (result !== null) {
-        throw new Error("Cet Le numéro de téléphone est déjà utilisé.");
+        throw new Error("Ce numéro de téléphone est déjà utilisé.");
       }
       return true;
     }),
@@ -73,7 +76,17 @@ export const addRequestValidator = [
     .bail()
     .isLength({ min: 2, max: 50 })
     .withMessage("Le adresse doit contenir entre 2 et 50 caractères.")
-    .bail(),
+    .bail()
+    .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ0-9\s,'-]*$/)
+    .withMessage("L'adresse contient des caractères invalides.")
+    .bail()
+    .custom((value) => {
+      // Vérifier que l'adresse n'est pas seulement des chiffres
+      if (/^\d+$/.test(value)) {
+        throw new Error("L'adresse ne peut pas être uniquement composée de chiffres.");
+      }
+      return true;
+    }),
 
   (req, res, next) => {
     const errors = validationResult(req);
@@ -129,7 +142,7 @@ export const updateRequestValidator = [
         },
       });
       if (result !== null) {
-        throw new Error("Cet Le numéro de téléphone est déjà utilisé.");
+        throw new Error("Ce numéro de téléphone est déjà utilisé.");
       }
       return true;
     }),
@@ -177,7 +190,17 @@ export const updateRequestValidator = [
     .bail()
     .isLength({ min: 2, max: 50 })
     .withMessage("Le adresse doit contenir entre 2 et 50 caractères.")
-    .bail(),
+    .bail()
+    .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ0-9\s,'-]*$/)
+    .withMessage("L'adresse contient des caractères invalides.")
+    .bail()
+    .custom((value) => {
+      // Vérifier que l'adresse n'est pas seulement des chiffres
+      if (/^\d+$/.test(value)) {
+        throw new Error("L'adresse ne peut pas être uniquement composée de chiffres.");
+      }
+      return true;
+    }),
 
   (req, res, next) => {
     const errors = validationResult(req);

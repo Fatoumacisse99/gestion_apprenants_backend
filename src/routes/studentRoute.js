@@ -8,7 +8,7 @@ import {
 
 const router = Router();
 
-router.post("/student", addRequestValidator, Student.createStudent);
+router.post("/student", addRequestValidator, Student.createStudent,);
 router.get("/students", Student.getAllStudents);
 router.get("/student/:id", Student.getByIdStudent);
 router.put("/student/:id", updateRequestValidator, Student.updateStudent);
