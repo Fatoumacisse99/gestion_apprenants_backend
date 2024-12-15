@@ -18,32 +18,7 @@ export const addRegistrationValidator = [
       return true;
     }),
 
-  check("endDate")
-    .notEmpty()
-    .withMessage("La date de fin est requise.")
-    .bail()
-    .custom((endDate, { req }) => {
-      const parsedEndDate = new Date(endDate);
-      if (isNaN(parsedEndDate)) {
-        throw new Error("La date de fin doit être une date valide.");
-      }
-
-      const parsedStartDate = new Date(req.body.startDate);
-      if (parsedEndDate <= parsedStartDate) {
-        throw new Error("La date de fin doit être après la date de début.");
-      }
-      // Conversion de la date en ISOString
-      req.body.endDate = parsedEndDate.toISOString();
-      return true;
-    }),
-
-  check("mount")
-    .notEmpty()
-    .withMessage("Le montant est requis.")
-    .bail()
-    .isFloat({ min: 0.01 })
-    .withMessage("Le montant doit être supérieur à 0.")
-    .bail(),
+  
 
   check("studentId")
     .notEmpty()
