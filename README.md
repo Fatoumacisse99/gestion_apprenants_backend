@@ -92,4 +92,4 @@ Vous pouvez consulter la documentation des endpoints et tester les différents p
 
 [Fatima Sall](https://github.com/FatimataAliouSall)
 
-[Harouna Adama Traoré](https://github.com/HarounaTraore)
+[Harouna Traoré](https://github.com/HarounaTraore)
